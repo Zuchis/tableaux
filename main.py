@@ -46,7 +46,7 @@ def parse():
         node.rightC = None
     return node
 
-with open('test/1.seq') as f:
+with open('test/2.seq') as f:
     for l in f:
         line = []
         if (count == 0):
@@ -60,14 +60,93 @@ with open('test/1.seq') as f:
             formulas.append(parse())
 
 for i in range(0, int(cardinality)):
-    formulas[i].value = True;
+    formulas[i].value = True
 
 for i in range(int(cardinality), len(formulas)):
-    formulas[i].value = False;
+    formulas[i].value = False
 
 def checkAlphaExpansion(forms):
-    for index,form in enumerate(forms):
-        pass
+    for index, form in enumerate(forms):
+        if ((form.token == '*' and form.value == True) or
+            (form.token == '+' and form.value == False) or
+            (form.token == ')' and form.value == False) or
+            (form.token == '-')):
+            return index
+    return -1
+
+def checkBetaExpansion(forms):
+    for index, form in enumerate(forms):
+        if ((form.token == '*' and form.value == False) or
+            (form.token == '+' and form.value == True) or
+            (form.token == ')' and form.value == True)):
+            return index
+    return -1
+
+def alphaExpand(index, forms):
+    form = forms[index]
+    a1 = deepcopy(form.leftC)
+    a2 = deepcopy(form.rightC)
+    if form.token == '*':
+        a1.value = True
+        a2.value = True
+    elif form.token == '+':
+        a1.value = False
+        a2.value = False
+    elif form.token == ')':
+        a1.value = True
+        a2.value = False
+    elif form.token == '-':
+        a1.value = not form.value
+
+    forms.pop(index)
+
+    forms.append(a1)
+    a1Formula = a1.formula()
+
+    if (a2 is not None):
+        forms.append(a2)
+        a2Formula = a2.formula()
+        for f in forms:
+            fFormula = f.formula()
+            if ((a1Formula == fFormula and a1.value == (not f.value)) or
+                (a2Formula == fFormula and a2.value == (not f.value))):
+                return True
+    else:
+        for f in forms:
+            fFormula = f.formula()
+            if (a1Formula == fFormula and a1.value == (not f.value)):
+                return True
+
+    return False
+
+def betaExpand(index, forms):
+    form = forms[index]
+    b1 = deepcopy(form.leftC)
+    b2 = deepcopy(form.rightC)
+    if form.token == '*':
+        b1.value = False
+        b2.value = False
+    elif form.token == '+':
+        b1.value = True
+        b2.value = True
+    elif form.token == ')':
+        b1.value = False
+        b2.value = True
+
+    forms.pop(index)
+
+    return (b1,b2)
+
+def checkForBetaClosed(forms):
+    beta = forms[-1]
+    betaFormula = beta.formula()
+    
+    for f in forms:
+        fFormula = f.formula()
+        if (betaFormula == fFormula and beta.value == (not f.value)):
+            return True
+
+    return False
 
 def mainLoop(forms):
     index = 0
@@ -83,7 +162,6 @@ def mainLoop(forms):
 
         if index != -1: #Expansão beta
             b1, b2 = betaExpand(index, forms)
-            forms.pop(index)
             formsB1 = deepcopy(forms)
             formsB1.append(b1)
             closedB1 = checkForBetaClosed(formsB1)
