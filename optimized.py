@@ -30,6 +30,7 @@ count = 0
 cardinality = 0
 currentFormula = []
 formulas = []
+nBranches = 0
 
 def parse():
     node = Node()
@@ -157,6 +158,7 @@ def static_var(varname, value):
 @static_var("counter", 0)
 def mainLoop(forms):
     mainLoop.counter += 1
+    forms = sorted(forms, key= lambda form: len(form.formula()))
     index = 0
     closed = False
     while index != -1 and not closed:
@@ -198,8 +200,6 @@ def prover(forms):
 
 if __name__ == "__main__":
     forms = deepcopy(formulas)
-
-    sort = sorted(forms, key= lambda form: len(form.formula()))
 
     result = prover(forms)
 
